@@ -33,9 +33,13 @@ resource "azurerm_service_plan" "example" {
   location            = data.azurerm_resource_group.example.location
   resource_group_name = data.azurerm_resource_group.example.name
 
-  # Define SKU attributes directly
-  sku_name            = var.sku_size  # This should be the full SKU name, like "B1", "S1", etc.
-  os_type             = var.os_type  # "Linux" or "Windows"
+# Define SKU attributes for testing (Basic or Free for non-production use)
+  sku {
+    tier = "Basic"  # Use Basic tier for testing or development environments
+    sku_name = var.sku_size     # Choose a smaller size like B1 for Basic tier (or F1 for Free)
+  }
+
+  os_type = var.os_type  # "Linux" or "Windows"
 }
 
 resource "random_string" "unique" {
