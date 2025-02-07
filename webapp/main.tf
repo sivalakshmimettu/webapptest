@@ -39,8 +39,8 @@ resource "azurerm_service_plan" "example" {
     sku_name = var.sku_size     # Choose a smaller size like B1 for Basic tier (or F1 for Free)
   }
 
-  os_type = var.os_type  # "Linux" or "Windows"
-}
+    os_type = var.os_type  # "Linux" or "Windows"
+  }
 
 resource "random_string" "unique" {
   length  = 8
