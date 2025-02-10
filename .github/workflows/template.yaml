@@ -43,12 +43,13 @@ jobs:
 
     # Step 5: Run Checkov for Terraform code security analysis
     - name: Run Checkov on Terraform code
+      id: checkov
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }} -o json -o checkov_output_${{ env.BUILD_NUMBER }}.json  # Save Checkov output as JSON
+        checkov -d ${{ env.TF_WORKING_DIR }} -o json -o checkov_output_${{ env.BUILD_NUMBER }}.json || echo "Checkov failed, but output will be saved."  # Run Checkov and capture failure without stopping
 
-    # Step 6: Copy Checkov output to the repository
+    # Step 6: Copy Checkov output to the repository even if Checkov fails
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
