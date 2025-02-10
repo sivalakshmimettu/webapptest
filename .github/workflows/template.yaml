@@ -49,15 +49,21 @@ jobs:
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
         # Run Checkov and save output even if it fails
-        checkov -d ${{ env.TF_WORKING_DIR }} -o json -o checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json || echo "Checkov failed, but output will be saved."
+        checkov -d ${{ env.TF_WORKING_DIR }} -o json > checkov_output_${{ env.BUILD_NUMBER }}.json || echo "Checkov failed, but output will be saved."
 
-    # Step 6: Copy Checkov output to the repository even if Checkov fails
+    # Step 6: List the contents of the directory to ensure the output file exists
+    - name: List Directory After Checkov Run
+      run: |
+        echo "Listing the contents of the directory after Checkov run..."
+        ls -al $GITHUB_WORKSPACE  # This will confirm if the file exists or not
+
+    # Step 7: Copy Checkov output to the repository even if Checkov fails
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
         
         # Dynamically set the file name based on the build number
-        CHECKOV_OUTPUT_FILE="checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json"
+        CHECKOV_OUTPUT_FILE="checkov_output_${{ env.BUILD_NUMBER }}.json"
         
         # Ensure the Checkov output file exists before adding it to Git
         if [ -f "$CHECKOV_OUTPUT_FILE" ]; then
@@ -84,13 +90,13 @@ jobs:
           exit 1
         fi
 
-    # Step 7: Validate Terraform configuration
+    # Step 8: Validate Terraform configuration
     - name: Terraform Validate
       run: |
         echo "Validating Terraform configuration..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} validate
 
-    # Step 8: Terraform Plan with environment-specific variables
+    # Step 9: Terraform Plan with environment-specific variables
     - name: Terraform Plan
       run: |
         echo "Running Terraform Plan with environment-specific tfvars..."
@@ -100,7 +106,7 @@ jobs:
         # Run Terraform Plan with the correct path to tfvars file
         terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan -var-file=${{ github.workspace }}/${ENV_TFVARS}
 
-    # Step 9: Remove terraform.lock.hcl file after applying (for clean-up)
+    # Step 10: Remove terraform.lock.hcl file after applying (for clean-up)
     - name: Remove terraform.lock.hcl
       run: |
         echo "Removing terraform.lock.hcl after applying..."
