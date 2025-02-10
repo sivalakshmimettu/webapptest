@@ -53,6 +53,7 @@ jobs:
         checkov -d ${{ env.TF_WORKING_DIR }} -o json > "checkov_output_${DATE_TIME}.json"
         # Copy the output file to the repo directory for later use
         cp "checkov_output_${DATE_TIME}.json" ${{ github.workspace }}/checkov_output_${DATE_TIME}.json
+        echo "Checkov output saved successfully."
 
     # Step 6: Validate Terraform configuration
     - name: Terraform Validate
@@ -77,7 +78,7 @@ jobs:
         rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
 
     # Step 9: Commit the Checkov output file to the repository
-    - name: Configure Git and Commit Checkov output
+    - name: Commit Checkov output to the repository
       run: |
         echo "Configuring Git..."
         git config --global user.email "sivalakshmimettu@github.com"
