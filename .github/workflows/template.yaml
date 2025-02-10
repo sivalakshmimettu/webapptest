@@ -29,6 +29,8 @@ jobs:
       run: |
         echo "Listing the contents of the working directory..."
         ls -al $GITHUB_WORKSPACE
+        echo "Listing contents of the expected Terraform directory..."
+        ls -al ${{ github.workspace }}/${{ github.event.inputs.resourcetype }}
 
     # Step 3: Install Terraform
     - name: Install Terraform ${{ env.TF_VERSION }}
@@ -48,11 +50,8 @@ jobs:
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
-        # Use the GITHUB_RUN_ID as the build number
         BUILD_NUMBER=${{ github.run_id }}
-        # Run Checkov and save the output to a file with the build number in the filename
         checkov -d ${{ env.TF_WORKING_DIR }} -o json > "checkov_output_${BUILD_NUMBER}.json"
-        # Copy the output file to the repo directory for later use
         cp "checkov_output_${BUILD_NUMBER}.json" ${{ github.workspace }}/checkov_output_${BUILD_NUMBER}.json
         echo "Checkov output saved successfully."
 
@@ -68,8 +67,6 @@ jobs:
         echo "Running Terraform Plan with environment-specific tfvars..."
         ENV_TFVARS="${{ github.event.inputs.resourcetype }}/terraform.tfvars"
         echo "Using environment-specific tfvars file: ${ENV_TFVARS}"
-    
-        # Run Terraform Plan with the correct path to tfvars file
         terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan -var-file=${{ github.workspace }}/${ENV_TFVARS}
 
     # Step 8: Remove terraform.lock.hcl file after applying (for clean-up)
@@ -84,7 +81,7 @@ jobs:
         echo "Configuring Git..."
         git config --global user.email "sivalakshmimettu@github.com"
         git config --global user.name "sivalakshmimettu"
-        git config --global core.safeDirectory "${GITHUB_WORKSPACE}"  # Ensuring safe directory
+        git config --global core.safeDirectory "${GITHUB_WORKSPACE}"
 
         echo "Adding Checkov output to git..."
         git add checkov_output_${{ env.BUILD_NUMBER }}.json
