@@ -46,7 +46,7 @@ jobs:
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }} > ${{ github.workspace }}/checkov_output.txt  # Save output to file
+        checkov -d ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/checkov_output.txt  # Save output to file
 
     # Step 6: Commit the Checkov output to the repository (if desired)
     - name: Commit Checkov Output
@@ -78,3 +78,10 @@ jobs:
       run: |
         echo "Removing terraform.lock.hcl after applying..."
         rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
+
+    # Optional Step: Upload the Checkov output as an artifact
+    - name: Upload Checkov Output as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: checkov-output
+        path: checkov_output.txt
