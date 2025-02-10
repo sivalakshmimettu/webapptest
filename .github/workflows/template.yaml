@@ -77,11 +77,18 @@ jobs:
         rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
 
     # Step 9: Commit the Checkov output file to the repository
-    - name: Commit Checkov output to the repository
+    - name: Configure Git and Commit Checkov output
       run: |
-        echo "Committing Checkov output to the repository..."
+        echo "Configuring Git..."
         git config --global user.email "sivalakshmimettu@github.com"
         git config --global user.name "sivalakshmimettu"
+        git config --global core.safeDirectory "${GITHUB_WORKSPACE}"  # Ensuring safe directory
+
+        echo "Adding Checkov output to git..."
         git add checkov_output_${{ env.TIMESTAMP }}.json
+        
+        echo "Committing Checkov output..."
         git commit -m "Add Checkov security scan output with timestamp"
+        
+        echo "Pushing changes..."
         git push origin HEAD:${{ github.ref }}
