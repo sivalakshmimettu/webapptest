@@ -49,7 +49,13 @@ jobs:
         checkov -d ${{ env.TF_WORKING_DIR }} -o json > checkov_output_${{ env.BUILD_NUMBER }}.json  # Generate Checkov output in JSON format with the build number
       continue-on-error: true  # Allow the workflow to continue even if Checkov exits with an error
 
-    # Step 5: Copy Checkov output to the repository
+    # Step 5: Configure Git user for commit
+    - name: Configure Git user
+      run: |
+        git config --global user.email "sivalakshmimettu@github.com"
+        git config --global user.name "sivalakshmimettu"
+
+    # Step 6: Copy Checkov output to the repository
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
@@ -75,7 +81,7 @@ jobs:
           exit 1
         fi
 
-    # Step 6: Terraform Plan with environment-specific variables
+    # Step 7: Terraform Plan with environment-specific variables
     - name: Terraform Plan
       run: |
         echo "Running Terraform Plan with environment-specific tfvars..."
@@ -85,7 +91,7 @@ jobs:
         # Run Terraform Plan with the correct path to tfvars file
         terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan -var-file=${{ github.workspace }}/${ENV_TFVARS}
 
-    # Step 7: Remove terraform.lock.hcl file after applying (for clean-up)
+    # Step 8: Remove terraform.lock.hcl file after applying (for clean-up)
     - name: Remove terraform.lock.hcl
       run: |
         echo "Removing terraform.lock.hcl after applying..."
