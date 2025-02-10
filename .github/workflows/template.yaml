@@ -51,7 +51,7 @@ jobs:
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }}  # Run Checkov on the Terraform directory
+        checkov -d ${{ env.TF_WORKING_DIR }} -o github  # Run Checkov on the Terraform directory
 
     # Step 6: Validate Terraform configuration
     - name: Terraform Validate
