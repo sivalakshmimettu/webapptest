@@ -51,17 +51,23 @@ jobs:
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
         BUILD_NUMBER=${{ github.run_id }}
-        checkov -d ${{ env.TF_WORKING_DIR }} -o json > checkov_output_${BUILD_NUMBER}.json
+        checkov -d ${{ env.TF_WORKING_DIR }} -o json > ${{ github.workspace }}/checkov_output_${BUILD_NUMBER}.json
         
         # Save the Checkov output file before continuing
-        cp checkov_output_${BUILD_NUMBER}.json ${{ github.workspace }}/checkov_output_${BUILD_NUMBER}.json
-        echo "Checkov output saved to the repository successfully."
+        echo "Checkov output saved to: checkov_output_${BUILD_NUMBER}.json"
 
-    # Step 6: Copy Checkov output file into the repository (before validate)
+    # Step 6: Copy Checkov output file to the repository
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
-        cp checkov_output_${{ env.BUILD_NUMBER }}.json ${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json
+        
+        # Ensure the Checkov output file exists before copying
+        if [ -f "${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json" ]; then
+          cp ${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json ${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json
+        else
+          echo "Checkov output file does not exist!"
+          exit 1
+        fi
 
     # Step 7: Validate Terraform configuration
     - name: Terraform Validate
