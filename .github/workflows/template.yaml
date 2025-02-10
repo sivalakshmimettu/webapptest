@@ -51,19 +51,23 @@ jobs:
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
         BUILD_NUMBER=${{ github.run_id }}
-        checkov -d ${{ env.TF_WORKING_DIR }} -o json > ${{ github.workspace }}/checkov_output_${BUILD_NUMBER}.json
         
-        # Save the Checkov output file before continuing
-        echo "Checkov output saved to: checkov_output_${BUILD_NUMBER}.json"
+        # Create directory for Checkov output
+        mkdir -p ${{ github.workspace }}/checkov_outputs
+        
+        # Run Checkov and save output
+        checkov -d ${{ env.TF_WORKING_DIR }} -o json > ${{ github.workspace }}/checkov_outputs/checkov_output_${BUILD_NUMBER}.json
+        
+        echo "Checkov output saved to: checkov_outputs/checkov_output_${BUILD_NUMBER}.json"
 
-    # Step 6: Copy Checkov output file to the repository
+    # Step 6: Copy Checkov output to the repository
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
         
         # Ensure the Checkov output file exists before copying
-        if [ -f "${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json" ]; then
-          cp ${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json ${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json
+        if [ -f "${{ github.workspace }}/checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json" ]; then
+          cp ${{ github.workspace }}/checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json ${{ github.workspace }}/checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
         else
           echo "Checkov output file does not exist!"
           exit 1
@@ -98,7 +102,7 @@ jobs:
         git config --global core.safeDirectory "${GITHUB_WORKSPACE}"
 
         echo "Adding Checkov output to git..."
-        git add checkov_output_${{ env.BUILD_NUMBER }}.json
+        git add checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
         
         echo "Committing Checkov output..."
         git commit -m "Add Checkov security scan output with build number $BUILD_NUMBER"
