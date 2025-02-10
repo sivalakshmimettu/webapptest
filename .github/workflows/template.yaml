@@ -55,33 +55,4 @@ jobs:
         git config --global user.email "sivalakshmimettu@github.com"
         git add checkov_output.txt
         git commit -m "Add Checkov output for Terraform security analysis"
-        git push
-
-    # Step 7: Validate Terraform configuration
-    - name: Terraform Validate
-      run: |
-        echo "Validating Terraform configuration..."
-        terraform -chdir=${{ env.TF_WORKING_DIR }} validate
-
-    # Step 8: Terraform Plan with environment-specific variables
-    - name: Terraform Plan
-      run: |
-        echo "Running Terraform Plan with environment-specific tfvars..."
-        ENV_TFVARS="${{ github.event.inputs.resourcetype }}/terraform.tfvars"
-        echo "Using environment-specific tfvars file: ${ENV_TFVARS}"
     
-        # Run Terraform Plan with the correct path to tfvars file
-        terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan -var-file=${{ github.workspace }}/${ENV_TFVARS}
-
-    # Step 9: Remove terraform.lock.hcl file after applying (for clean-up)
-    - name: Remove terraform.lock.hcl
-      run: |
-        echo "Removing terraform.lock.hcl after applying..."
-        rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
-
-    # Optional Step: Upload the Checkov output as an artifact (using v2)
-    - name: Upload Checkov Output as Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: checkov-output
-        path: checkov_output.txt
