@@ -3,12 +3,17 @@ name: Terraform Deployment with Checkov
 on:
   push:
     branches:
-      - none  # Trigger on push to main branch
+      - main  # Trigger on push to main branch
   workflow_dispatch:
     inputs:
       resourcetype:
         description: 'resourcetype to deploy (e.g., VM, Webapp)'
         required: true
+      # Default value can be added if needed
+      # environment:
+      #   description: 'Environment to deploy (e.g., dev, prod)'
+      #   required: false
+      #   default: 'dev'
 
 jobs:
   terraform-deployment:
@@ -17,75 +22,59 @@ jobs:
     env:
       TF_WORKING_DIR: ${{ github.workspace }}/${{ github.event.inputs.resourcetype }}  # Correct working directory
       TF_VERSION: '1.3.5'  # Specify the Terraform version
-      BUILD_NUMBER: ${{ github.run_id }}  # Unique build number (run ID)
+      BUILD_NUMBER: ${{ github.run_id }}  # Use the GitHub run ID as the build number
 
     steps:
     # Step 1: Checkout the repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Step 2: List the contents of the working directory (for debugging)
-    - name: List Working Directory
-      run: |
-        echo "Listing the contents of the working directory..."
-        ls -al $GITHUB_WORKSPACE
-
-    # Step 3: Install Terraform
+    # Step 2: Install Terraform
     - name: Install Terraform ${{ env.TF_VERSION }}
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: ${{ env.TF_VERSION }}
 
-    # Step 4: Initialize Terraform
+    # Step 3: Initialize Terraform
     - name: Terraform Init
       run: |
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Run Checkov for Terraform code security analysis
+    # Step 4: Run Checkov for Terraform code security analysis
     - name: Run Checkov on Terraform code
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }} -o json -o checkov_output_${{ env.BUILD_NUMBER }}.json  # Save Checkov output to a file
+        checkov -d ${{ env.TF_WORKING_DIR }} -o json > checkov_output_${{ env.BUILD_NUMBER }}.json  # Generate Checkov output in JSON format with the build number
 
-    # Step 6: Copy Checkov output to the repository
+    # Step 5: Copy Checkov output to the repository
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
         
         # Ensure the Checkov output file exists before adding it to Git
-        if [ -f "${{ github.workspace }}/checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json" ]; then
-          echo "Checkov output file exists, adding it to Git..."
+        if [ -f "checkov_output_${{ env.BUILD_NUMBER }}.json" ]; then
+          # Create the checkov_outputs directory if it doesn't exist
+          mkdir -p checkov_outputs
+          
+          # Move the Checkov output file to the checkov_outputs directory
+          mv checkov_output_${{ env.BUILD_NUMBER }}.json checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
+          
+          # Add the output file to the Git repository
+          git add checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
+          
+          # Commit the file to the repository
+          git commit -m "Add Checkov output for build ${BUILD_NUMBER}"
+          
+          # Push the changes back to the repository
+          git push
         else
           echo "Checkov output file does not exist!"
           exit 1
         fi
 
-    # Step 7: Commit the Checkov output file to the repository
-    - name: Commit Checkov output to the repository
-      run: |
-        echo "Configuring Git..."
-        git config --global user.email "sivalakshmimettu@github.com"
-        git config --global user.name "sivalakshmimettu"
-        git config --global core.safeDirectory "${GITHUB_WORKSPACE}"
-
-        echo "Adding Checkov output to git..."
-        git add checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
-        
-        echo "Committing Checkov output..."
-        git commit -m "Add Checkov security scan output with build number $BUILD_NUMBER"
-        
-        echo "Pushing changes..."
-        git push origin HEAD:${{ github.ref }}
-
-    # Step 8: Validate Terraform configuration
-    - name: Terraform Validate
-      run: |
-        echo "Validating Terraform configuration..."
-        terraform -chdir=${{ env.TF_WORKING_DIR }} validate
-
-    # Step 9: Terraform Plan with environment-specific variables
+    # Step 6: Terraform Plan with environment-specific variables
     - name: Terraform Plan
       run: |
         echo "Running Terraform Plan with environment-specific tfvars..."
@@ -95,7 +84,7 @@ jobs:
         # Run Terraform Plan with the correct path to tfvars file
         terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan -var-file=${{ github.workspace }}/${ENV_TFVARS}
 
-    # Step 10: Remove terraform.lock.hcl file after applying (for clean-up)
+    # Step 7: Remove terraform.lock.hcl file after applying (for clean-up)
     - name: Remove terraform.lock.hcl
       run: |
         echo "Removing terraform.lock.hcl after applying..."
