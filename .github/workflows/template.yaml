@@ -53,43 +53,24 @@ jobs:
         BUILD_NUMBER=${{ github.run_id }}
         checkov -d ${{ env.TF_WORKING_DIR }} -o json > "checkov_output_${BUILD_NUMBER}.json"
         
-        # Copy Checkov output file to the repo immediately
+        # Save the Checkov output file before continuing
         cp "checkov_output_${BUILD_NUMBER}.json" ${{ github.workspace }}/checkov_output_${BUILD_NUMBER}.json
         echo "Checkov output saved to the repository successfully."
 
-    # Step 6: Validate Terraform configuration
+    # Step 6: Copy Checkov output file into the repository (before validate)
+    - name: Copy Checkov output to the repository
+      run: |
+        echo "Copying Checkov output file to the repository..."
+        cp "checkov_output_${{ env.BUILD_NUMBER }}.json" ${{ github.workspace }}/checkov_output_${{ env.BUILD_NUMBER }}.json
+
+    # Step 7: Validate Terraform configuration
     - name: Terraform Validate
       run: |
         echo "Validating Terraform configuration..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} validate
 
-    # Step 7: Terraform Plan with environment-specific variables
+    # Step 8: Terraform Plan with environment-specific variables
     - name: Terraform Plan
       run: |
         echo "Running Terraform Plan with environment-specific tfvars..."
-        ENV_TFVARS="${{ github.event.inputs.resourcetype }}/terraform.tfvars"
-        echo "Using environment-specific tfvars file: ${ENV_TFVARS}"
-        terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan -var-file=${{ github.workspace }}/${ENV_TFVARS}
-
-    # Step 8: Remove terraform.lock.hcl file after applying (for clean-up)
-    - name: Remove terraform.lock.hcl
-      run: |
-        echo "Removing terraform.lock.hcl after applying..."
-        rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
-
-    # Step 9: Commit the Checkov output file to the repository
-    - name: Commit Checkov output to the repository
-      run: |
-        echo "Configuring Git..."
-        git config --global user.email "sivalakshmimettu@github.com"
-        git config --global user.name "sivalakshmimettu"
-        git config --global core.safeDirectory "${GITHUB_WORKSPACE}"
-
-        echo "Adding Checkov output to git..."
-        git add checkov_output_${{ env.BUILD_NUMBER }}.json
-        
-        echo "Committing Checkov output..."
-        git commit -m "Add Checkov security scan output with build number ${BUILD_NUMBER}"
-        
-        echo "Pushing changes..."
-        git push origin HEAD:${{ github.ref }}
+        ENV_TFVARS="${{ github.e
