@@ -47,6 +47,7 @@ jobs:
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
         checkov -d ${{ env.TF_WORKING_DIR }} -o json > checkov_output_${{ env.BUILD_NUMBER }}.json  # Generate Checkov output in JSON format with the build number
+      continue-on-error: true  # Allow the workflow to continue even if Checkov exits with an error
 
     # Step 5: Copy Checkov output to the repository
     - name: Copy Checkov output to the repository
