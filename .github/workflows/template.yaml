@@ -52,8 +52,10 @@ jobs:
         pip install checkov  # Install Checkov
         BUILD_NUMBER=${{ github.run_id }}
         checkov -d ${{ env.TF_WORKING_DIR }} -o json > "checkov_output_${BUILD_NUMBER}.json"
+        
+        # Copy Checkov output file to the repo immediately
         cp "checkov_output_${BUILD_NUMBER}.json" ${{ github.workspace }}/checkov_output_${BUILD_NUMBER}.json
-        echo "Checkov output saved successfully."
+        echo "Checkov output saved to the repository successfully."
 
     # Step 6: Validate Terraform configuration
     - name: Terraform Validate
