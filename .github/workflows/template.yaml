@@ -17,6 +17,7 @@ jobs:
     env:
       TF_WORKING_DIR: ${{ github.workspace }}/${{ github.event.inputs.resourcetype }}  # Correct working directory
       TF_VERSION: '1.3.5'  # Specify the Terraform version
+      BUILD_NUMBER: ${{ github.run_id }}  # Unique build number using GitHub run ID
 
     steps:
     # Step 1: Checkout the repository
@@ -53,17 +54,20 @@ jobs:
     - name: Copy Checkov output to the repository
       run: |
         echo "Copying Checkov output file to the repository..."
-        
+
+        # Dynamically set the file name based on the build number
+        CHECKOV_OUTPUT_FILE="checkov_output_${{ env.BUILD_NUMBER }}.json"
+
         # Ensure the Checkov output file exists before adding it to Git
-        if [ -f "checkov_output_${{ env.BUILD_NUMBER }}.json" ]; then
+        if [ -f "$CHECKOV_OUTPUT_FILE" ]; then
           # Create the checkov_outputs directory if it doesn't exist
           mkdir -p checkov_outputs
           
           # Move the Checkov output file to the checkov_outputs directory
-          mv checkov_output_${{ env.BUILD_NUMBER }}.json checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
+          mv "$CHECKOV_OUTPUT_FILE" "checkov_outputs/$CHECKOV_OUTPUT_FILE"
           
           # Add the output file to the Git repository
-          git add checkov_outputs/checkov_output_${{ env.BUILD_NUMBER }}.json
+          git add "checkov_outputs/$CHECKOV_OUTPUT_FILE"
           
           # Commit the file to the repository
           git commit -m "Add Checkov output for build ${BUILD_NUMBER}"
