@@ -79,9 +79,9 @@ jobs:
         echo "Removing terraform.lock.hcl after applying..."
         rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
 
-    # Optional Step: Upload the Checkov output as an artifact
+    # Optional Step: Upload the Checkov output as an artifact (using v2)
     - name: Upload Checkov Output as Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: checkov-output
         path: checkov_output.txt
