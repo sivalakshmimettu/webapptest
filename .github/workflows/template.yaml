@@ -52,3 +52,7 @@ jobs:
         git config --global user.email "sivalakshmimettu@github.com"
         git add checkov_output.txt
         git commit -m "Add Checkov output for Terraform security analysis"
+        git status
+        git log -n 1  # Check the last commit details
+        git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
+        git push
