@@ -9,11 +9,6 @@ on:
       resourcetype:
         description: 'resourcetype to deploy (e.g., VM, Webapp)'
         required: true
-      # Default value can be added if needed
-      # environment:
-      #   description: 'Environment to deploy (e.g., dev, prod)'
-      #   required: false
-      #   default: 'dev'
 
 jobs:
   terraform-deployment:
@@ -22,6 +17,7 @@ jobs:
     env:
       TF_WORKING_DIR: ${{ github.workspace }}/${{ github.event.inputs.resourcetype }}  # Correct working directory
       TF_VERSION: '1.3.5'  # Specify the Terraform version
+      TIMESTAMP: ${{ github.run_id }}  # Use GitHub's run ID for a unique identifier
 
     steps:
     # Step 1: Checkout the repository
@@ -51,7 +47,12 @@ jobs:
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }} -o github_failed_only  # Run Checkov on the Terraform directory
+        # Get the current date and time
+        DATE_TIME=$(date +'%Y-%m-%d_%H-%M-%S')
+        # Run Checkov and save the output to a timestamped file
+        checkov -d ${{ env.TF_WORKING_DIR }} -o json > "checkov_output_${DATE_TIME}.json"
+        # Copy the output file to the repo directory for later use
+        cp "checkov_output_${DATE_TIME}.json" ${{ github.workspace }}/checkov_output_${DATE_TIME}.json
 
     # Step 6: Validate Terraform configuration
     - name: Terraform Validate
@@ -74,3 +75,13 @@ jobs:
       run: |
         echo "Removing terraform.lock.hcl after applying..."
         rm -f ${{ env.TF_WORKING_DIR }}/terraform.lock.hcl
+
+    # Step 9: Commit the Checkov output file to the repository
+    - name: Commit Checkov output to the repository
+      run: |
+        echo "Committing Checkov output to the repository..."
+        git config --global user.email "sivalakshmimettu@github.com"
+        git config --global user.name "sivalakshmimettu"
+        git add checkov_output_${{ env.TIMESTAMP }}.json
+        git commit -m "Add Checkov security scan output with timestamp"
+        git push origin HEAD:${{ github.ref }}
