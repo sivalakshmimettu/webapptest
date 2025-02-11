@@ -28,6 +28,7 @@ jobs:
       run: |
         echo "Listing the contents of the working directory..."
         ls -al $GITHUB_WORKSPACE
+
     # Step 3: Install Terraform
     - name: Install Terraform ${{ env.TF_VERSION }}
       uses: hashicorp/setup-terraform@v2
@@ -39,12 +40,14 @@ jobs:
       run: |
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
+
     # Step 5: Run Checkov for Terraform code security analysis and save output to a file
     - name: Run Checkov on Terraform code
       run: |
         echo "Running Checkov for security analysis on Terraform configuration..."
         pip install checkov  # Install Checkov
         checkov -d ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/checkov_output.txt  # Save output to file
+
     # Step 6: Commit the Checkov output to the repository (if desired)
     - name: Commit Checkov Output
       run: |
@@ -54,5 +57,9 @@ jobs:
         git commit -m "Add Checkov output for Terraform security analysis"
         git status
         git log -n 1  # Check the last commit details
+
+    # Step 7: Push the commit using GitHub token for authentication
+    - name: Push Checkov Output Commit
+      run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
         git push
