@@ -63,3 +63,9 @@ jobs:
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
         git push
+
+   # Step 6: Validate Terraform configuration
+    - name: Terraform Validate
+      run: |
+        echo "Validating Terraform configuration..."
+        terraform -chdir=${{ env.TF_WORKING_DIR }} validate
