@@ -1,13 +1,13 @@
-name: Terraform Deployment with Sync (tflint)
+name: Terraform Deployment with Snyk
 
 on:
   push:
     branches:
-      - none  # Trigger on push to main branch
+      - none  # Trigger on push to the main branch
   workflow_dispatch:
     inputs:
       resourcetype:
-        description: 'resourcetype to deploy (e.g., VM, Webapp)'
+        description: 'Resource type to deploy (e.g., VM, Webapp)'
         required: true
 
 jobs:
@@ -41,48 +41,31 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Install Sync (tflint) for security analysis
-    - name: Install Sync (tflint)
+    # Step 5: Install Snyk for security analysis
+    - name: Install Snyk
       run: |
-        echo "Installing Sync (tflint)..."
-        
-        # Download tflint binary directly for Linux
-        curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64
+        echo "Installing Snyk..."
+        npm install -g snyk  # Install Snyk globally
+        snyk --version  # Verify Snyk installation
 
-        # Check if the download was successful
-        if [ ! -f tflint-linux-amd64 ]; then
-          echo "Failed to download tflint. Exiting."
-          exit 1
-        fi
-
-        # Make the binary executable
-        chmod +x tflint-linux-amd64
-
-        # Move tflint binary to the appropriate directory
-        sudo mv tflint-linux-amd64 /usr/local/bin/tflint
-
-        # Verify tflint installation
-        tflint --version
-
-    # Step 6: Run Sync (tflint) for Terraform code security analysis and save output to a file
-    - name: Run Sync (tflint) on Terraform code
+    # Step 6: Run Snyk for security analysis on the Terraform code and save output to a file
+    - name: Run Snyk on Terraform code
       run: |
-        echo "Running Sync (tflint) for security analysis on Terraform configuration..."
-        tflint --config=${{ env.TF_WORKING_DIR }}/.tflint.hcl --init  # Initialize Sync if needed
-        tflint --config=${{ env.TF_WORKING_DIR }}/.tflint.hcl > ${{ github.workspace }}/sync_output.txt  # Save output to file
+        echo "Running Snyk for security analysis on Terraform configuration..."
+        snyk iac test ${{ env.TF_WORKING_DIR }} --all-projects > ${{ github.workspace }}/snyk_output.txt  # Save output to file
 
-    # Step 7: Commit the Sync output to the repository (if desired)
-    - name: Commit Sync Output
+    # Step 7: Commit the Snyk output to the repository (if desired)
+    - name: Commit Snyk Output
       run: |
         git config --global user.name "sivalakshmimettu"
         git config --global user.email "sivalakshmimettu@github.com"
-        git add sync_output.txt
-        git commit -m "Add Sync (tflint) output for Terraform security analysis"
+        git add snyk_output.txt
+        git commit -m "Add Snyk output for Terraform security analysis"
         git status
         git log -n 1  # Check the last commit details
 
     # Step 8: Push the commit using GitHub token for authentication
-    - name: Push Sync Output Commit
+    - name: Push Snyk Output Commit
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
         git push
