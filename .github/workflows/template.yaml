@@ -3,11 +3,11 @@ name: Terraform Deployment with Snyk
 on:
   push:
     branches:
-      - none  # Trigger on push to the main branch
+      - none  # Trigger on push to main branch
   workflow_dispatch:
     inputs:
       resourcetype:
-        description: 'Resource type to deploy (e.g., VM, Webapp)'
+        description: 'resourcetype to deploy (e.g., VM, Webapp)'
         required: true
 
 jobs:
@@ -41,20 +41,26 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Install Snyk for security analysis
+    # Step 5: Install Snyk CLI
     - name: Install Snyk
       run: |
-        echo "Installing Snyk..."
-        npm install -g snyk  # Install Snyk globally
-        snyk --version  # Verify Snyk installation
+        echo "Installing Snyk CLI..."
+        npm install -g snyk
+        snyk --version  # Verify installation
 
-    # Step 6: Run Snyk for security analysis on the Terraform code and save output to a file
+    # Step 6: Run Snyk for security analysis on Terraform code
     - name: Run Snyk on Terraform code
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
-        snyk iac test ${{ env.TF_WORKING_DIR }} --all-projects --json > ${{ github.workspace }}/snyk_output.json  # Save output as JSON for easier troubleshooting
+        snyk iac test ${{ env.TF_WORKING_DIR }} --all-projects --json --debug > ${{ github.workspace }}/snyk_output.json
 
-    # Step 7: Commit the Snyk output to the repository (if desired)
+    # Step 7: Check if snyk_output.json exists and view its contents
+    - name: Check Snyk Output
+      run: |
+        echo "Checking snyk_output.json..."
+        cat ${{ github.workspace }}/snyk_output.json
+
+    # Step 8: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
       run: |
         git config --global user.name "sivalakshmimettu"
@@ -64,13 +70,13 @@ jobs:
         git status
         git log -n 1  # Check the last commit details
 
-    # Step 8: Push the commit using GitHub token for authentication
+    # Step 9: Push the commit using GitHub token for authentication
     - name: Push Snyk Output Commit
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
         git push
 
-    # Step 9: Validate Terraform configuration
+    # Step 10: Validate Terraform configuration
     - name: Terraform Validate
       run: |
         echo "Validating Terraform configuration..."
