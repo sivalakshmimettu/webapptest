@@ -45,7 +45,7 @@ jobs:
     - name: Install Sync (tflint)
       run: |
         echo "Installing Sync (tflint)..."
-
+        
         # Download tflint binary directly for Linux
         curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64
 
