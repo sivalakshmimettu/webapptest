@@ -1,4 +1,4 @@
-name: Terraform Deployment with Checkov
+name: Terraform Deployment with Sync
 
 on:
   push:
@@ -41,31 +41,26 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Run Checkov for Terraform code security analysis and save output to a file
-    - name: Run Checkov on Terraform code
+    # Step 5: Sync Terraform configurations or modules
+    - name: Sync Terraform Configurations
       run: |
-        echo "Running Checkov for security analysis on Terraform configuration..."
-        pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/checkov_output.txt  # Save output to file
+        echo "Syncing Terraform configurations..."
+        terraform -chdir=${{ env.TF_WORKING_DIR }} validate  # Validate if the configuration is correct
+        terraform -chdir=${{ env.TF_WORKING_DIR }} plan -out=tfplan  # Generate an execution plan
+        #terraform -chdir=${{ env.TF_WORKING_DIR }} apply -auto-approve tfplan  # Apply the changes
 
-    # Step 6: Commit the Checkov output to the repository (if desired)
-    - name: Commit Checkov Output
+    # Step 6: Commit the changes (optional)
+    - name: Commit Terraform Plan Output (Optional)
       run: |
         git config --global user.name "sivalakshmimettu"
         git config --global user.email "sivalakshmimettu@github.com"
-        git add checkov_output.txt
-        git commit -m "Add Checkov output for Terraform security analysis"
+        git add .
+        git commit -m "Apply Terraform changes"
         git status
         git log -n 1  # Check the last commit details
 
-    # Step 7: Push the commit using GitHub token for authentication
-    - name: Push Checkov Output Commit
+    # Step 7: Push the changes
+    - name: Push Changes
       run: |
-        git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
         git push
-
-   # Step 6: Validate Terraform configuration
-    - name: Terraform Validate
-      run: |
-        echo "Validating Terraform configuration..."
-        terraform -chdir=${{ env.TF_WORKING_DIR }} validate
