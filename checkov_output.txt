@@ -1,0 +1,260 @@
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By Prisma Cloud | version: 3.2.369 
+
+terraform scan results:
+
+Passed checks: 4, Failed checks: 14, Skipped checks: 0
+
+Check: CKV_AZURE_211: "Ensure App Service plan suitable for production use"
+	PASSED for resource: azurerm_service_plan.example
+	File: /main.tf:31-43
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-211
+Check: CKV_AZURE_57: "Ensure that CORS disallows every resource to access app services"
+	PASSED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-cors-disallows-every-resource-to-access-app-services
+Check: CKV_AZURE_15: "Ensure web app is using the latest version of TLS encryption"
+	PASSED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-6
+Check: CKV_AZURE_72: "Ensure that remote debugging is not enabled for app services"
+	PASSED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-remote-debugging-is-not-enabled-for-app-services
+Check: CKV_AZURE_212: "Ensure App Service has a minimum number of instances for failover"
+	FAILED for resource: azurerm_service_plan.example
+	File: /main.tf:31-43
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/azr-general-212
+
+		31 | resource "azurerm_service_plan" "example" {
+		32 |   name                = var.app_service_plan_name
+		33 |   location            = data.azurerm_resource_group.example.location
+		34 |   resource_group_name = data.azurerm_resource_group.example.name
+		35 | 
+		36 | # Define SKU attributes for testing (Basic or Free for non-production use)
+		37 |   sku {
+		38 |     tier = "Basic"  # Use Basic tier for testing or development environments
+		39 |     sku_name = var.sku_size     # Choose a smaller size like B1 for Basic tier (or F1 for Free)
+		40 |   }
+		41 | 
+		42 |     os_type = var.os_type  # "Linux" or "Windows"
+		43 |   }
+
+Check: CKV_AZURE_225: "Ensure the App Service Plan is zone redundant"
+	FAILED for resource: azurerm_service_plan.example
+	File: /main.tf:31-43
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-storage-policies/bc-azure-225
+
+		31 | resource "azurerm_service_plan" "example" {
+		32 |   name                = var.app_service_plan_name
+		33 |   location            = data.azurerm_resource_group.example.location
+		34 |   resource_group_name = data.azurerm_resource_group.example.name
+		35 | 
+		36 | # Define SKU attributes for testing (Basic or Free for non-production use)
+		37 |   sku {
+		38 |     tier = "Basic"  # Use Basic tier for testing or development environments
+		39 |     sku_name = var.sku_size     # Choose a smaller size like B1 for Basic tier (or F1 for Free)
+		40 |   }
+		41 | 
+		42 |     os_type = var.os_type  # "Linux" or "Windows"
+		43 |   }
+
+Check: CKV_AZURE_63: "Ensure that App service enables HTTP logging"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-logging-policies/ensure-that-app-service-enables-http-logging
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_14: "Ensure web app redirects all HTTP traffic to HTTPS in Azure App Service"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-5
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_78: "Ensure FTP deployments are disabled"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-ftp-deployments-are-disabled
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_65: "Ensure that App service enables detailed error messages"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-logging-policies/tbdensure-that-app-service-enables-detailed-error-messages
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_213: "Ensure that App Service configures health check"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/azr-networking-213
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_17: "Ensure the web app has 'Client Certificates (Incoming client certificates)' set"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-7
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_13: "Ensure App Service Authentication is set on Azure App Service"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/bc-azr-general-2
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_88: "Ensure that app services use Azure Files"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-app-services-use-azure-files
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_66: "Ensure that App service enables failed request tracing"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-logging-policies/ensure-that-app-service-enables-failed-request-tracing
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_18: "Ensure that 'HTTP Version' is the latest if used to run the web app"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-networking-policies/bc-azr-networking-8
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_16: "Ensure that Register with Azure Active Directory is enabled on App Service"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-iam-policies/bc-azr-iam-1
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+Check: CKV_AZURE_71: "Ensure that Managed identity provider is enabled for app services"
+	FAILED for resource: azurerm_app_service.example
+	File: /main.tf:53-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/azure-policies/azure-general-policies/ensure-that-managed-identity-provider-is-enabled-for-app-services
+
+		53 | resource "azurerm_app_service" "example" {
+		54 |   name                = "${var.web_app_name}-${random_string.unique.result}"
+		55 |   location            = data.azurerm_resource_group.example.location
+		56 |   resource_group_name = data.azurerm_resource_group.example.name
+		57 |   app_service_plan_id = azurerm_service_plan.example.id
+		58 | 
+		59 |   app_settings = {
+		60 |     "WEBSITE_NODE_DEFAULT_VERSION" = "14"
+		61 |   }
+		62 | }
+
+
