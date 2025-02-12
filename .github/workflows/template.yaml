@@ -52,14 +52,14 @@ jobs:
     - name: Run Snyk on Terraform code
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
-        snyk iac test ${{ env.TF_WORKING_DIR }} --all-projects > ${{ github.workspace }}/snyk_output.txt  # Save output to file
+        snyk iac test ${{ env.TF_WORKING_DIR }} --all-projects --json > ${{ github.workspace }}/snyk_output.json  # Save output as JSON for easier troubleshooting
 
     # Step 7: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
       run: |
         git config --global user.name "sivalakshmimettu"
         git config --global user.email "sivalakshmimettu@github.com"
-        git add snyk_output.txt
+        git add snyk_output.json
         git commit -m "Add Snyk output for Terraform security analysis"
         git status
         git log -n 1  # Check the last commit details
