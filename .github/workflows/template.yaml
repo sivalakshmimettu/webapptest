@@ -1,4 +1,4 @@
-name: Terraform Deployment with Sync
+name: Terraform Deployment with Sync (tflint)
 
 on:
   push:
@@ -45,45 +45,55 @@ jobs:
     - name: Install Sync (tflint)
       run: |
         echo "Installing Sync (tflint)..."
-        curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64.zip
+        
+        # Download tflint binary
+        curl -L -o tflint-linux-amd64.zip https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64.zip
+        
+        # Check if the download was successful
+        if [ ! -f tflint-linux-amd64.zip ]; then
+          echo "Failed to download tflint. Exiting."
+          exit 1
+        fi
+        
+        # Unzip tflint
         unzip tflint-linux-amd64.zip
+        
+        # Check if unzip was successful
+        if [ ! -f tflint ]; then
+          echo "Failed to extract tflint. Exiting."
+          exit 1
+        fi
+        
+        # Move tflint binary to the appropriate directory
         sudo mv tflint /usr/local/bin/tflint
-        tflint --version  # Verify tflint installation
+        
+        # Verify tflint installation
+        tflint --version
 
-    # Step 6: Run Sync (tflint) on Terraform code and save output to a file
+    # Step 6: Run Sync (tflint) for Terraform code security analysis and save output to a file
     - name: Run Sync (tflint) on Terraform code
       run: |
         echo "Running Sync (tflint) for security analysis on Terraform configuration..."
         tflint --config=${{ env.TF_WORKING_DIR }}/.tflint.hcl --init  # Initialize Sync if needed
         tflint --config=${{ env.TF_WORKING_DIR }}/.tflint.hcl > ${{ github.workspace }}/sync_output.txt  # Save output to file
 
-    # Step 7: Ensure .terraform files are ignored
-    - name: Update .gitignore to exclude .terraform files
-      run: |
-        echo ".terraform/" >> .gitignore
-        echo ".terraform.lock.hcl" >> .gitignore
-        git add .gitignore
-        git commit -m "Update .gitignore to exclude .terraform files"
-        git status
-        git log -n 1  # Check the last commit details
-
-    # Step 8: Commit the Sync output to the repository
+    # Step 7: Commit the Sync output to the repository (if desired)
     - name: Commit Sync Output
       run: |
         git config --global user.name "sivalakshmimettu"
         git config --global user.email "sivalakshmimettu@github.com"
         git add sync_output.txt
-        git commit -m "Add Sync output for Terraform security analysis"
+        git commit -m "Add Sync (tflint) output for Terraform security analysis"
         git status
         git log -n 1  # Check the last commit details
 
-    # Step 9: Push the commit using GitHub token for authentication
+    # Step 8: Push the commit using GitHub token for authentication
     - name: Push Sync Output Commit
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
         git push
 
-    # Step 10: Validate Terraform configuration
+    # Step 9: Validate Terraform configuration
     - name: Terraform Validate
       run: |
         echo "Validating Terraform configuration..."
