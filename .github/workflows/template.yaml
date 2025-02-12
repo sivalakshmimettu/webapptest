@@ -45,28 +45,22 @@ jobs:
     - name: Install Sync (tflint)
       run: |
         echo "Installing Sync (tflint)..."
-        
-        # Download tflint binary
-        curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64.zip
-        
+
+        # Download tflint binary directly for Linux
+        curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64
+
         # Check if the download was successful
-        if [ ! -f tflint-linux-amd64.zip ]; then
+        if [ ! -f tflint-linux-amd64 ]; then
           echo "Failed to download tflint. Exiting."
           exit 1
         fi
-        
-        # Unzip tflint
-        unzip tflint-linux-amd64.zip
-        
-        # Check if unzip was successful
-        if [ ! -f tflint ]; then
-          echo "Failed to extract tflint. Exiting."
-          exit 1
-        fi
-        
+
+        # Make the binary executable
+        chmod +x tflint-linux-amd64
+
         # Move tflint binary to the appropriate directory
-        sudo mv tflint /usr/local/bin/tflint
-        
+        sudo mv tflint-linux-amd64 /usr/local/bin/tflint
+
         # Verify tflint installation
         tflint --version
 
