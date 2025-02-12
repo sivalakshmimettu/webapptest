@@ -41,12 +41,14 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Install Sync for security analysis
-    - name: Install Sync for Terraform security analysis
+    # Step 5: Install Sync (tflint) for security analysis
+    - name: Install Sync (tflint)
       run: |
-        echo "Installing Sync..."
-        curl -sSL https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64 -o /usr/local/bin/tflint
-        chmod +x /usr/local/bin/tflint
+        echo "Installing Sync (tflint)..."
+        curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64.zip
+        unzip tflint-linux-amd64.zip
+        sudo mv tflint /usr/local/bin/tflint
+        tflint --version  # Verify tflint installation
 
     # Step 6: Run Sync (tflint) on Terraform code and save output to a file
     - name: Run Sync (tflint) on Terraform code
