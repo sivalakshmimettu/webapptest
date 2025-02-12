@@ -47,7 +47,7 @@ jobs:
         echo "Installing Sync (tflint)..."
         
         # Download tflint binary
-        curl -L -o tflint-linux-amd64.zip https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64.zip
+        curl -LO https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64.zip
         
         # Check if the download was successful
         if [ ! -f tflint-linux-amd64.zip ]; then
