@@ -1,4 +1,4 @@
-name: Terraform Deployment with Checkov
+name: Terraform Deployment with Sync
 
 on:
   push:
@@ -41,30 +41,47 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Run Checkov for Terraform code security analysis and save output to a file
-    - name: Run Checkov on Terraform code
+    # Step 5: Install Sync for security analysis
+    - name: Install Sync for Terraform security analysis
       run: |
-        echo "Running Checkov for security analysis on Terraform configuration..."
-        pip install checkov  # Install Checkov
-        checkov -d ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/checkov_output.txt  # Save output to file
+        echo "Installing Sync..."
+        curl -sSL https://github.com/terraform-linters/tflint/releases/download/v0.34.0/tflint-linux-amd64 -o /usr/local/bin/tflint
+        chmod +x /usr/local/bin/tflint
 
-    # Step 6: Commit the Checkov output to the repository (if desired)
-    - name: Commit Checkov Output
+    # Step 6: Run Sync (tflint) on Terraform code and save output to a file
+    - name: Run Sync (tflint) on Terraform code
       run: |
-        git config --global user.name "sivalakshmimettu"
-        git config --global user.email "sivalakshmimettu@github.com"
-        git add checkov_output.txt
-        git commit -m "Add Checkov output for Terraform security analysis"
+        echo "Running Sync (tflint) for security analysis on Terraform configuration..."
+        tflint --config=${{ env.TF_WORKING_DIR }}/.tflint.hcl --init  # Initialize Sync if needed
+        tflint --config=${{ env.TF_WORKING_DIR }}/.tflint.hcl > ${{ github.workspace }}/sync_output.txt  # Save output to file
+
+    # Step 7: Ensure .terraform files are ignored
+    - name: Update .gitignore to exclude .terraform files
+      run: |
+        echo ".terraform/" >> .gitignore
+        echo ".terraform.lock.hcl" >> .gitignore
+        git add .gitignore
+        git commit -m "Update .gitignore to exclude .terraform files"
         git status
         git log -n 1  # Check the last commit details
 
-    # Step 7: Push the commit using GitHub token for authentication
-    - name: Push Checkov Output Commit
+    # Step 8: Commit the Sync output to the repository
+    - name: Commit Sync Output
+      run: |
+        git config --global user.name "sivalakshmimettu"
+        git config --global user.email "sivalakshmimettu@github.com"
+        git add sync_output.txt
+        git commit -m "Add Sync output for Terraform security analysis"
+        git status
+        git log -n 1  # Check the last commit details
+
+    # Step 9: Push the commit using GitHub token for authentication
+    - name: Push Sync Output Commit
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
         git push
 
-   # Step 6: Validate Terraform configuration
+    # Step 10: Validate Terraform configuration
     - name: Terraform Validate
       run: |
         echo "Validating Terraform configuration..."
