@@ -41,19 +41,19 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Run Snyk for Terraform code security analysis and save output to a file
+    # Step 5: Run Snyk for Terraform code security analysis and save output to a .txt file
     - name: Run Snyk on Terraform code
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
         npm install -g snyk  # Install Snyk CLI globally
-        snyk test --all-projects --json | tee ${{ github.workspace }}/snyk_output.json  # Run Snyk test and save output to a JSON file
+        snyk test ${{ env.TF_WORKING_DIR }} --all-projects | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
 
     # Step 6: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
       run: |
         git config --global user.name "sivalakshmimettu"
         git config --global user.email "sivalakshmimettu@github.com"
-        git add snyk_output.json
+        git add snyk_output.txt
         git commit -m "Add Snyk output for Terraform security analysis"
         git status
         git log -n 1  # Check the last commit details
