@@ -50,4 +50,35 @@ jobs:
         snyk --version  # Verify installation
 
     # Step 6: Run Snyk for security analysis on Terraform code
-    - name: 
+    - name: Run Snyk on Terraform code
+      run: |
+        echo "Running Snyk for security analysis on Terraform configuration..."
+        snyk iac test ${{ env.TF_WORKING_DIR }} --all-projects --json --debug > ${{ github.workspace }}/snyk_output.json
+
+    # Step 7: Check if snyk_output.json exists and view its contents
+    - name: Check Snyk Output
+      run: |
+        echo "Checking snyk_output.json..."
+        cat ${{ github.workspace }}/snyk_output.json
+
+    # Step 8: Commit the Snyk output to the repository (if desired)
+    - name: Commit Snyk Output
+      run: |
+        git config --global user.name "sivalakshmimettu"
+        git config --global user.email "sivalakshmimettu@github.com"
+        git add snyk_output.json
+        git commit -m "Add Snyk output for Terraform security analysis"
+        git status
+        git log -n 1  # Check the last commit details
+
+    # Step 9: Push the commit using GitHub token for authentication
+    - name: Push Snyk Output Commit
+      run: |
+        git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
+        git push
+
+    # Step 10: Validate Terraform configuration
+    - name: Terraform Validate
+      run: |
+        echo "Validating Terraform configuration..."
+        terraform -chdir=${{ env.TF_WORKING_DIR }} validate
