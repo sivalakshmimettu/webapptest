@@ -24,10 +24,10 @@ jobs:
       uses: actions/checkout@v3
 
     # Step 2: List the contents of the working directory (for debugging)
-    - name: List Working Directory
+    - name: List contents of the working directory
       run: |
         echo "Listing the contents of the working directory..."
-        ls -al $GITHUB_WORKSPACE
+        ls -al ${{ env.TF_WORKING_DIR }}
 
     # Step 3: Install Terraform
     - name: Install Terraform ${{ env.TF_VERSION }}
@@ -41,12 +41,12 @@ jobs:
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Run Snyk for Terraform code security analysis and save output to a .txt file
+    # Step 5: Install Snyk CLI and run security analysis on Terraform code
     - name: Run Snyk on Terraform code
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
         npm install -g snyk  # Install Snyk CLI globally
-        snyk test ${{ env.TF_WORKING_DIR }} --all-projects | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
+        snyk test --terraform ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
 
     # Step 6: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
