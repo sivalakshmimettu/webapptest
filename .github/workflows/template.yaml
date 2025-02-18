@@ -11,7 +11,7 @@ on:
         required: true
 
 jobs:
-  terraform-deployment:
+  terraform-security-analysis:
     runs-on: ubuntu-latest
 
     env:
@@ -35,20 +35,32 @@ jobs:
       with:
         terraform_version: ${{ env.TF_VERSION }}
 
-    # Step 4: Initialize Terraform
+    # Step 4: Check if directory and Terraform files exist
+    - name: Check if directory exists and contains Terraform files
+      run: |
+        if [ ! -d "${{ env.TF_WORKING_DIR }}" ]; then
+          echo "Directory ${TF_WORKING_DIR} does not exist!";
+          exit 1;
+        fi
+        if [ ! -f "${{ env.TF_WORKING_DIR }}/main.tf" ]; then
+          echo "No Terraform configuration found in ${TF_WORKING_DIR}. Ensure a main.tf file exists.";
+          exit 1;
+        fi
+
+    # Step 5: Initialize Terraform
     - name: Terraform Init
       run: |
         echo "Initializing Terraform..."
         terraform -chdir=${{ env.TF_WORKING_DIR }} init -upgrade
 
-    # Step 5: Install Snyk CLI and run security analysis on Terraform code
+    # Step 6: Install Snyk CLI and run security analysis on Terraform code
     - name: Run Snyk on Terraform code
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
         npm install -g snyk  # Install Snyk CLI globally
         snyk test --terraform ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
 
-    # Step 6: Commit the Snyk output to the repository (if desired)
+    # Step 7: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
       run: |
         git config --global user.name "sivalakshmimettu"
@@ -58,13 +70,13 @@ jobs:
         git status
         git log -n 1  # Check the last commit details
 
-    # Step 7: Push the commit using GitHub token for authentication
+    # Step 8: Push the commit using GitHub token for authentication
     - name: Push Snyk Output Commit
       run: |
         git remote set-url origin https://x-access-token:${{ secrets.GIT_PAT }}@github.com/${{ github.repository }}.git
-        git push
+        git push || echo "Push failed, skipping..."
 
-    # Step 8: Validate Terraform configuration
+    # Step 9: Validate Terraform configuration
     - name: Terraform Validate
       run: |
         echo "Validating Terraform configuration..."
