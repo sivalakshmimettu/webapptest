@@ -1,1 +1,0 @@
-Not a recognised option did you mean --file=/home/runner/work/webapptest/webapptest/webapp/main.tf? Check other options by running snyk --help
