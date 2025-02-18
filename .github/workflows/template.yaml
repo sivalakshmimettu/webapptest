@@ -58,25 +58,17 @@ jobs:
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
         npm install -g snyk  # Install Snyk CLI globally
-        snyk test --terraform ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
+        snyk test --terraform ${{ env.TF_WORKING_DIR }}/main.tf | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
 
-    # Step 7: Commit the Snyk output to the repository (if updated)
+    # Step 7: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
       run: |
         git config --global user.name "sivalakshmimettu"
         git config --global user.email "sivalakshmimettu@github.com"
-
-        # Add the snyk_output.txt to the staging area
-        git add ${{ github.workspace }}/snyk_output.txt
-
-        # Commit only if the file has changed
-        git diff --quiet || git commit -m "Add/Update Snyk output for Terraform security analysis"
-
-        # Show the status to verify what's staged
+        git add snyk_output.txt
+        git commit -m "Add Snyk output for Terraform security analysis"
         git status
-
-        # Show the last commit log
-        git log -n 1
+        git log -n 1  # Check the last commit details
 
     # Step 8: Push the commit using GitHub token for authentication
     - name: Push Snyk Output Commit
