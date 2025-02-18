@@ -58,7 +58,7 @@ jobs:
       run: |
         echo "Running Snyk for security analysis on Terraform configuration..."
         npm install -g snyk  # Install Snyk CLI globally
-        snyk test --terraform ${{ env.TF_WORKING_DIR }} | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
+        snyk test --terraform ${{ env.TF_WORKING_DIR }}/main.tf | tee ${{ github.workspace }}/snyk_output.txt  # Run Snyk test and save output to a .txt file
 
     # Step 7: Commit the Snyk output to the repository (if desired)
     - name: Commit Snyk Output
